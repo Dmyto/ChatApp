@@ -36,10 +36,11 @@ import java.util.ArrayList;
 
 public class UserListActivity extends AppCompatActivity {
 
-    private static final int RC_AVATAR_PICKER = 123;
+    private static final int RC_AVATAR_PICKER = 1;
 
 
     private FirebaseAuth mAuth;
+    private UserModel userModel;
     private String userName;
 
     private DatabaseReference usersDatabaseReference;
@@ -62,6 +63,7 @@ public class UserListActivity extends AppCompatActivity {
         if (intent != null) {
             userName = intent.getStringExtra("username");
         }
+
         userModelArrayList = new ArrayList<>();
         storage = FirebaseStorage.getInstance();
         avatarImageStorageReference = storage.getReference().child("avatar_images");
@@ -108,7 +110,8 @@ public class UserListActivity extends AppCompatActivity {
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                     UserModel userModel = dataSnapshot.getValue(UserModel.class);
                     if (!userModel.getId().equals(mAuth.getCurrentUser().getUid())) {
-                        userModel.setAvatarMockResource();
+                        userModel.setAvatarMockResource(userModel.getAvatarMockResource());
+                        setUser(userModel);
                         userModelArrayList.add(userModel);
                         userAdapter.notifyDataSetChanged();
                     }
@@ -138,6 +141,10 @@ public class UserListActivity extends AppCompatActivity {
         }
     }
 
+    private void setUser(UserModel userModel) {
+        this.userModel = userModel;
+    }
+
     private void buildRecyclerView() {
         usersRecyclerView = findViewById(R.id.userListRecyclerView);
         usersRecyclerView.setHasFixedSize(true);
@@ -160,7 +167,9 @@ public class UserListActivity extends AppCompatActivity {
     private void gotoChat(int position) {
         Intent intent = new Intent(UserListActivity.this, ChatActivity.class);
         intent.putExtra("recipient", userModelArrayList.get(position).getId());
-        intent.putExtra("username", userName);
+        intent.putExtra("userName", userName);
+        intent.putExtra(" recipientAvatar", userModelArrayList.get(position).getAvatarMockResource());
+        intent.putExtra("userAvatar", userModel.getAvatarMockResource());
         startActivity(intent);
     }
 
@@ -184,10 +193,11 @@ public class UserListActivity extends AppCompatActivity {
             }).addOnCompleteListener(new OnCompleteListener<Uri>() {
                 @Override
                 public void onComplete(@NonNull Task<Uri> task) {
-                    if (task.isSuccessful()){
+                    if (task.isSuccessful()) {
                         Uri downloadUri = task.getResult();
-                        UserModel userModel = new UserModel();
-//                        userModel.setAvatarMockResource(Integer downloadUri);
+                        if (userModel != null) {
+                            userModel.setAvatarMockResource(downloadUri.toString());
+                        }
                     }
                 }
             });

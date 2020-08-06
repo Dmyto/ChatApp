@@ -1,5 +1,7 @@
 package com.example.chatapp.model;
 
+import android.net.Uri;
+
 public class ModelMessage {
 
     private String text;
@@ -7,8 +9,10 @@ public class ModelMessage {
     private String sender;
     private String recipient;
     private String imageUrl;
+    private String avatarMockResourceMsg;
 
-    public ModelMessage() {
+
+    public ModelMessage(){
 
     }
 
@@ -18,6 +22,14 @@ public class ModelMessage {
         this.sender = sender;
         this.recipient = recipient;
         this.imageUrl = imageUrl;
+    }
+
+    public String getAvatarMockResourceMsg() {
+        return avatarMockResourceMsg;
+    }
+
+    public void setAvatarMockResourceMsg(String avatarMockResourceMsg) {
+        this.avatarMockResourceMsg = avatarMockResourceMsg;
     }
 
     public String getText() {

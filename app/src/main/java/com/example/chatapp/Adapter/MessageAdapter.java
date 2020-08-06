@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.chatapp.model.ModelMessage;
 import com.example.chatapp.R;
 
@@ -35,13 +36,23 @@ public class MessageAdapter extends ArrayAdapter<ModelMessage> {
 
         ImageView photoImageView = convertView.findViewById(R.id.photoImageView);
 
+        ImageView avatarMessageImageView = convertView.findViewById(R.id.avatar_message);
+
         TextView textTextView = convertView.findViewById(R.id.text_textView);
 
         TextView nameTextView = convertView.findViewById(R.id.name_textView);
 
         ModelMessage message = getItem(position);
 
-        if (message.getImageUrl() == null){
+        if (message.getAvatarMockResourceMsg() != null){
+            Glide.with(avatarMessageImageView.getContext())
+                    .load(message.getAvatarMockResourceMsg())
+                    .apply(RequestOptions.circleCropTransform())
+                    .into(avatarMessageImageView);
+        } else{
+        }
+
+        if (message.getImageUrl() == null) {
             textTextView.setVisibility(View.VISIBLE);
             photoImageView.setVisibility(View.GONE);
             textTextView.setText(message.getText());

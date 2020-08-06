@@ -3,8 +3,11 @@ package com.example.chatapp;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
 
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
+import android.icu.lang.UCharacter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -60,10 +63,15 @@ public class ChatActivity extends AppCompatActivity {
     @BindView(R.id.messageEditText)
     EditText messageEditText;
 
+
     private String userName;
+    private String recipientUserId;
+
+    private String recipientAvatarUri;
+    private String userAvatarUri;
+
     private MessageAdapter adapter;
     private static final int RC_IMAGE_PICKER = 123;
-    private String recipientUserId;
 
     private FirebaseDatabase database;
     private DatabaseReference messagesDatabaseReferences;
@@ -97,10 +105,11 @@ public class ChatActivity extends AppCompatActivity {
 
             userName = intent.getStringExtra("userName");
             recipientUserId = intent.getStringExtra("recipient");
+            recipientAvatarUri = intent.getStringExtra("recipientAvatar");
+            userAvatarUri = intent.getStringExtra("userAvatar");
         } else {
             userName = "Default";
         }
-
 
         List<ModelMessage> modelMessageList = new ArrayList<>();
 
@@ -108,6 +117,7 @@ public class ChatActivity extends AppCompatActivity {
                 R.layout.message_item, modelMessageList);
 
         messageListView.setAdapter(adapter);
+        messageListView.setDividerHeight(20);
         progressBar.setVisibility(ProgressBar.INVISIBLE);
 
         messageEditText.addTextChangedListener(new TextWatcher() {
@@ -143,6 +153,7 @@ public class ChatActivity extends AppCompatActivity {
                 modelMessage.setSender(auth.getCurrentUser().getUid());
                 modelMessage.setRecipient(recipientUserId);
                 modelMessage.setImageUrl(null);
+                modelMessage.setAvatarMockResourceMsg(userAvatarUri);
 
                 messagesDatabaseReferences.push().setValue(modelMessage);
 
@@ -167,7 +178,7 @@ public class ChatActivity extends AppCompatActivity {
                 ModelMessage message = dataSnapshot.getValue(ModelMessage.class);
 
                 if (message.getSender().equals(auth.getCurrentUser().getUid()) && message.getRecipient().equals(recipientUserId)
-                || message.getRecipient().equals(auth.getCurrentUser().getUid()) && message.getSender().equals(recipientUserId)){
+                        || message.getRecipient().equals(auth.getCurrentUser().getUid()) && message.getSender().equals(recipientUserId)) {
                     adapter.add(message);
                 }
 
@@ -239,7 +250,7 @@ public class ChatActivity extends AppCompatActivity {
 
             uploadTask = imageReference.putFile(selectedImageUri);
 
-            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
                 @Override
                 public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
                     if (!task.isSuccessful()) {
