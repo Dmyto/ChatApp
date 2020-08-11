@@ -1,7 +1,5 @@
 package com.example.chatapp.model;
 
-import android.net.Uri;
-
 public class ModelMessage {
 
     private String text;
@@ -10,6 +8,7 @@ public class ModelMessage {
     private String recipient;
     private String imageUrl;
     private String avatarMockResourceMsg;
+    private String timeSent;
 
 
     public ModelMessage(){
@@ -70,5 +69,13 @@ public class ModelMessage {
 
     public void setRecipient(String recipient) {
         this.recipient = recipient;
+    }
+
+    public String getTimeSent() {
+        return timeSent;
+    }
+
+    public void setTimeSent(String dateSent) {
+        this.timeSent = dateSent;
     }
 }

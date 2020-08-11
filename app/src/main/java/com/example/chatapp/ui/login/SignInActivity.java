@@ -95,7 +95,7 @@ public class SignInActivity extends AppCompatActivity {
         avatarImageStorageReference = firebaseStorage.getReference().child("avatar_images");
 
         if (mAuth.getCurrentUser() != null) {
-            startActivity(new Intent(SignInActivity.this, UserListActivity.class));
+            startActivity(new Intent(this, UserListActivity.class));
         }
 
         loginSignUpButton.setOnClickListener(new View.OnClickListener() {

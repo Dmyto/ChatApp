@@ -13,7 +13,7 @@
             android:id="@+id/avatarImageView"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@drawable/circle_background"
+            android:background="@drawable/ic_baseline_photo_camera_24"
             android:scaleType="fitXY" />
 
         <TextView

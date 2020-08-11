@@ -1,5 +1,8 @@
 package com.example.chatapp.model;
 
+import java.io.Externalizable;
+import java.io.Serializable;
+
 public class UserModel {
     private String name;
     private String email;

@@ -32,6 +32,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.Externalizable;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 public class UserListActivity extends AppCompatActivity {
@@ -164,12 +166,19 @@ public class UserListActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onBackPressed(){
+        if (getSupportFragmentManager().getBackStackEntryCount() == 1){
+            finish();
+        }
+        else {
+            super.onBackPressed();
+        }
+    }
+
     private void gotoChat(int position) {
         Intent intent = new Intent(UserListActivity.this, ChatActivity.class);
         intent.putExtra("recipient", userModelArrayList.get(position).getId());
-        intent.putExtra("userName", userName);
-        intent.putExtra(" recipientAvatar", userModelArrayList.get(position).getAvatarMockResource());
-        intent.putExtra("userAvatar", userModel.getAvatarMockResource());
         startActivity(intent);
     }
 
