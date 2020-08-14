@@ -98,14 +98,9 @@ public class SignInActivity extends AppCompatActivity {
             startActivity(new Intent(this, UserListActivity.class));
         }
 
-        loginSignUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
+        loginSignUpButton.setOnClickListener(view ->
                 loginSignUpUser(emailEditText.getText().toString().trim(),
-                        passwordEditText.getText().toString().trim());
-            }
-        });
+                        passwordEditText.getText().toString().trim()));
 
         accountAvatarImageView.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -10,11 +10,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.contentcapture.DataRemovalRequest;
+import android.widget.Toast;
 
 import com.example.chatapp.Adapter.UserAdapter;
 import com.example.chatapp.model.UserModel;
@@ -23,6 +22,7 @@ import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -32,8 +32,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.io.Externalizable;
-import java.io.Serializable;
 import java.util.ArrayList;
 
 public class UserListActivity extends AppCompatActivity {
@@ -53,8 +51,10 @@ public class UserListActivity extends AppCompatActivity {
     private UserAdapter userAdapter;
     private RecyclerView.LayoutManager userLayoutManager;
     private StorageReference avatarImageStorageReference;
-    private FirebaseStorage storage;
+    private DatabaseReference usersDatabaseReferences;
 
+    private FirebaseStorage storage;
+    FirebaseDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +67,13 @@ public class UserListActivity extends AppCompatActivity {
         }
 
         userModelArrayList = new ArrayList<>();
+
         storage = FirebaseStorage.getInstance();
+        database = FirebaseDatabase.getInstance();
+
         avatarImageStorageReference = storage.getReference().child("avatar_images");
+        usersDatabaseReferences = database.getReference().child("users");
+
 
         mAuth = FirebaseAuth.getInstance();
         buildRecyclerView();
@@ -111,9 +116,10 @@ public class UserListActivity extends AppCompatActivity {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                     UserModel userModel = dataSnapshot.getValue(UserModel.class);
-                    if (!userModel.getId().equals(mAuth.getCurrentUser().getUid())) {
-                        userModel.setAvatarMockResource(userModel.getAvatarMockResource());
+                    if (userModel.getId().equals(mAuth.getCurrentUser().getUid())) {
                         setUser(userModel);
+                    } else {
+                        userModel.setAvatarMockResource(userModel.getAvatarMockResource());
                         userModelArrayList.add(userModel);
                         userAdapter.notifyDataSetChanged();
                     }
@@ -158,20 +164,14 @@ public class UserListActivity extends AppCompatActivity {
         usersRecyclerView.setLayoutManager(userLayoutManager);
         usersRecyclerView.setAdapter(userAdapter);
 
-        userAdapter.setOnUserClickListener(new UserAdapter.OnUserClickListener() {
-            @Override
-            public void onUserClick(int position) {
-                gotoChat(position);
-            }
-        });
+        userAdapter.setOnUserClickListener(position -> gotoChat(position));
     }
 
     @Override
-    public void onBackPressed(){
-        if (getSupportFragmentManager().getBackStackEntryCount() == 1){
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
             finish();
-        }
-        else {
+        } else {
             super.onBackPressed();
         }
     }
@@ -191,25 +191,29 @@ public class UserListActivity extends AppCompatActivity {
             final StorageReference avatarReference = avatarImageStorageReference.child(selectedAvatarUri.getLastPathSegment());
             UploadTask uploadTask = avatarReference.putFile(selectedAvatarUri);
 
-            Task<Uri> uriTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                @Override
-                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                    if (!task.isSuccessful()) {
-                        task.getException();
-                    }
-                    return avatarReference.getDownloadUrl();
+            uploadTask.continueWithTask(task -> {
+                if (!task.isSuccessful()) {
+                    task.getException();
                 }
+                return avatarReference.getDownloadUrl();
             }).addOnCompleteListener(new OnCompleteListener<Uri>() {
                 @Override
                 public void onComplete(@NonNull Task<Uri> task) {
                     if (task.isSuccessful()) {
                         Uri downloadUri = task.getResult();
-                        if (userModel != null) {
+                        if (downloadUri != null) {
+
                             userModel.setAvatarMockResource(downloadUri.toString());
+
+                            Toast.makeText(getApplicationContext(), downloadUri.toString(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Operation failed", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
             });
         }
+
+
     }
 }

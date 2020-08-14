@@ -8,7 +8,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -22,6 +24,9 @@ public class MessageListAdapter extends RecyclerView.Adapter {
 
     private static final int VIEW_TYPE_MESSAGE_SENDER = 1;
     private static final int VIEW_TYPE_MESSAGE_RECIPIENT = 2;
+
+    private static final String DIALOG_IMAGE = "DialogImage";
+
 
     private List<ModelMessage> mModelMessagesList;
     private String recipientUserId;
@@ -76,14 +81,8 @@ public class MessageListAdapter extends RecyclerView.Adapter {
     }
 
     private void openImg(ModelMessage message) {
-        Bundle bundle = new Bundle();
-        bundle.putString("picture", message.getImageUrl());
-        ImageFragment fragment = new ImageFragment();
-        fragment.setArguments(bundle);
-        fragmentManager.beginTransaction()
-                .replace(android.R.id.content, fragment)
-                .addToBackStack(null)
-                .commit();
+        ImageFragment dialog = ImageFragment.newInstance(message.getImageUrl());
+        dialog.show(fragmentManager, DIALOG_IMAGE);
     }
 
     @Override
