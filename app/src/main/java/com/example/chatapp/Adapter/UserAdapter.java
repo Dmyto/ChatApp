@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.chatapp.R;
 import com.example.chatapp.model.UserModel;
 
@@ -27,7 +29,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         this.listener = listener;
     }
 
-    public UserAdapter(ArrayList<UserModel> users){
+    public UserAdapter(ArrayList<UserModel> users) {
         this.users = users;
     }
 
@@ -35,14 +37,19 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     @Override
     public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.user_item, parent, false);
-        UserViewHolder viewHolder = new UserViewHolder(view,listener);
+        UserViewHolder viewHolder = new UserViewHolder(view, listener);
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
         UserModel currentUser = users.get(position);
-        holder.avatarImageView.setImageResource(currentUser.getAvatarMockResource());
+
+        Glide.with(holder.avatarImageView.getContext())
+                .load(currentUser.getAvatarMockResource())
+                .apply(RequestOptions.circleCropTransform())
+                .into(holder.avatarImageView);
+
         holder.userNameTextView.setText(currentUser.getName());
     }
 

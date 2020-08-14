@@ -3,6 +3,9 @@ package com.example.chatapp;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -10,20 +13,15 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 
-import com.example.chatapp.Adapter.MessageAdapter;
+import com.example.chatapp.Adapter.MessageListAdapter;
 import com.example.chatapp.model.ModelMessage;
 import com.example.chatapp.model.UserModel;
-import com.example.chatapp.ui.login.SignInActivity;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -37,7 +35,10 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -46,7 +47,7 @@ import butterknife.ButterKnife;
 public class ChatActivity extends AppCompatActivity {
 
     @BindView(R.id.messageListView)
-    ListView messageListView;
+    RecyclerView messageRecyclerView;
 
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
@@ -60,10 +61,13 @@ public class ChatActivity extends AppCompatActivity {
     @BindView(R.id.messageEditText)
     EditText messageEditText;
 
+
     private String userName;
-    private MessageAdapter adapter;
-    private static final int RC_IMAGE_PICKER = 123;
     private String recipientUserId;
+
+    private MessageListAdapter messageListAdapter;
+
+    private static final int RC_IMAGE_PICKER = 123;
 
     private FirebaseDatabase database;
     private DatabaseReference messagesDatabaseReferences;
@@ -74,6 +78,8 @@ public class ChatActivity extends AppCompatActivity {
     private StorageReference chatImageStorageReference;
 
     private FirebaseAuth auth;
+
+    List<ModelMessage> modelMessageList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,10 +97,8 @@ public class ChatActivity extends AppCompatActivity {
         usersDatabaseReferences = database.getReference().child("users");
         chatImageStorageReference = storage.getReference().child("chat_images");
 
-
         Intent intent = getIntent();
         if (intent != null) {
-
             userName = intent.getStringExtra("userName");
             recipientUserId = intent.getStringExtra("recipient");
         } else {
@@ -102,12 +106,11 @@ public class ChatActivity extends AppCompatActivity {
         }
 
 
-        List<ModelMessage> modelMessageList = new ArrayList<>();
+        messageListAdapter = new MessageListAdapter(modelMessageList, recipientUserId, getSupportFragmentManager());
+        messageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new MessageAdapter(this,
-                R.layout.message_item, modelMessageList);
+        messageRecyclerView.setAdapter(messageListAdapter);
 
-        messageListView.setAdapter(adapter);
         progressBar.setVisibility(ProgressBar.INVISIBLE);
 
         messageEditText.addTextChangedListener(new TextWatcher() {
@@ -144,6 +147,9 @@ public class ChatActivity extends AppCompatActivity {
                 modelMessage.setRecipient(recipientUserId);
                 modelMessage.setImageUrl(null);
 
+                DateFormat dateFormat = new SimpleDateFormat("HH:mm");
+                modelMessage.setTimeSent(dateFormat.format(new Date()));
+
                 messagesDatabaseReferences.push().setValue(modelMessage);
 
                 messageEditText.setText("");
@@ -155,7 +161,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/*");
-                intent.putExtra(intent.EXTRA_LOCAL_ONLY, true);
+                intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
                 startActivityForResult(Intent.createChooser(intent, "Choose an image"),
                         RC_IMAGE_PICKER);
             }
@@ -167,10 +173,11 @@ public class ChatActivity extends AppCompatActivity {
                 ModelMessage message = dataSnapshot.getValue(ModelMessage.class);
 
                 if (message.getSender().equals(auth.getCurrentUser().getUid()) && message.getRecipient().equals(recipientUserId)
-                || message.getRecipient().equals(auth.getCurrentUser().getUid()) && message.getSender().equals(recipientUserId)){
-                    adapter.add(message);
+                        || message.getRecipient().equals(auth.getCurrentUser().getUid()) && message.getSender().equals(recipientUserId)) {
+                    modelMessageList.add(message);
+                    messageListAdapter.notifyDataSetChanged();
+                    messageRecyclerView.scrollToPosition(modelMessageList.size()-1);
                 }
-
             }
 
             @Override
@@ -193,6 +200,8 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         };
+
+
 
         usersChildEventListener = new ChildEventListener() {
             @Override
@@ -223,9 +232,9 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         };
-
         usersDatabaseReferences.addChildEventListener(usersChildEventListener);
         messagesDatabaseReferences.addChildEventListener(messagesChildEventListener);
+
     }
 
 
@@ -235,17 +244,15 @@ public class ChatActivity extends AppCompatActivity {
         if (requestCode == RC_IMAGE_PICKER && resultCode == RESULT_OK) {
             Uri selectedImageUri = data.getData();
             final StorageReference imageReference = chatImageStorageReference.child(selectedImageUri.getLastPathSegment());
+
             UploadTask uploadTask = imageReference.putFile(selectedImageUri);
 
-            uploadTask = imageReference.putFile(selectedImageUri);
-
-            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
                 @Override
                 public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
                     if (!task.isSuccessful()) {
                         throw task.getException();
                     }
-
                     // Continue with the task to get the download URL
                     return imageReference.getDownloadUrl();
                 }
@@ -259,6 +266,8 @@ public class ChatActivity extends AppCompatActivity {
                         message.setSender(auth.getCurrentUser().getUid());
                         message.setRecipient(recipientUserId);
                         message.setName(userName);
+                        DateFormat dateFormat = new SimpleDateFormat("HH:mm");
+                        message.setTimeSent(dateFormat.format(new Date()));
                         messagesDatabaseReferences.push().setValue(message);
                     } else {
                         // Handle failures

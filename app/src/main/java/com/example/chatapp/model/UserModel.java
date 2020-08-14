@@ -1,12 +1,15 @@
 package com.example.chatapp.model;
 
+import java.io.Externalizable;
+import java.io.Serializable;
+
 public class UserModel {
     private String name;
     private String email;
     private String id;
-    private int avatarMockResource;
+    private String avatarMockResource;
 
-    public UserModel(String name, String email, String id, int avatarMockResource) {
+    public UserModel(String name, String email, String id, String avatarMockResource) {
         this.name = name;
         this.email = email;
         this.id = id;
@@ -16,11 +19,11 @@ public class UserModel {
     public UserModel() {
     }
 
-    public int getAvatarMockResource() {
+    public String getAvatarMockResource() {
         return avatarMockResource;
     }
 
-    public void setAvatarMockResource(int avatarMockResource) {
+    public void setAvatarMockResource(String avatarMockResource) {
         this.avatarMockResource = avatarMockResource;
     }
 

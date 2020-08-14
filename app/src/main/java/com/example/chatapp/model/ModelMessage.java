@@ -7,8 +7,11 @@ public class ModelMessage {
     private String sender;
     private String recipient;
     private String imageUrl;
+    private String avatarMockResourceMsg;
+    private String timeSent;
 
-    public ModelMessage() {
+
+    public ModelMessage(){
 
     }
 
@@ -18,6 +21,14 @@ public class ModelMessage {
         this.sender = sender;
         this.recipient = recipient;
         this.imageUrl = imageUrl;
+    }
+
+    public String getAvatarMockResourceMsg() {
+        return avatarMockResourceMsg;
+    }
+
+    public void setAvatarMockResourceMsg(String avatarMockResourceMsg) {
+        this.avatarMockResourceMsg = avatarMockResourceMsg;
     }
 
     public String getText() {
@@ -58,5 +69,13 @@ public class ModelMessage {
 
     public void setRecipient(String recipient) {
         this.recipient = recipient;
+    }
+
+    public String getTimeSent() {
+        return timeSent;
+    }
+
+    public void setTimeSent(String dateSent) {
+        this.timeSent = dateSent;
     }
 }
