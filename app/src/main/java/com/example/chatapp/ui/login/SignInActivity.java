@@ -17,14 +17,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.chatapp.ChatActivity;
 import com.example.chatapp.R;
 import com.example.chatapp.UserListActivity;
 import com.example.chatapp.model.UserModel;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,8 +31,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-
-import java.io.File;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -105,13 +100,17 @@ public class SignInActivity extends AppCompatActivity {
         accountAvatarImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/*");
-                intent.putExtra(intent.EXTRA_LOCAL_ONLY, true);
-                startActivityForResult(Intent.createChooser(intent, "Choose an image"),
-                        RC_AVATAR_PICKER);
+                openStorage();
             }
         });
+    }
+
+    private void openStorage() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        intent.putExtra(intent.EXTRA_LOCAL_ONLY, true);
+        startActivityForResult(Intent.createChooser(intent, "Choose an image"),
+                RC_AVATAR_PICKER);
     }
 
     private void loginSignUpUser(String email, String password) {
@@ -132,13 +131,11 @@ public class SignInActivity extends AppCompatActivity {
                                     Intent intent = new Intent(SignInActivity.this, UserListActivity.class);
                                     intent.putExtra("userName", nameEditText.getText().toString().trim());
                                     startActivity(intent);
-                                    //updateUI(user);
                                 } else {
                                     // If sign in fails, display a message to the user.
                                     Log.w(TAG, "signInWithEmail:failure", task.getException());
                                     Toast.makeText(SignInActivity.this, "Authentication failed.",
                                             Toast.LENGTH_SHORT).show();
-                                    //updateUI(null);
                                 }
                             }
                         });
@@ -163,19 +160,13 @@ public class SignInActivity extends AppCompatActivity {
                                     FirebaseUser user = mAuth.getCurrentUser();
                                     createUser(user);
                                     Intent intent = new Intent(SignInActivity.this, UserListActivity.class);
-                                    intent.putExtra("userName", nameEditText.getText().toString().trim());
                                     startActivity(intent);
-
-                                    // updateUI(user);
                                 } else {
                                     // If sign in fails, display a message to the user.
                                     Log.w(TAG, "createUserWithEmail:failure", task.getException());
                                     Toast.makeText(SignInActivity.this, "Authentication failed.",
                                             Toast.LENGTH_SHORT).show();
-                                    //updateUI(null);
                                 }
-
-                                // ...
                             }
                         });
             }

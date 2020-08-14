@@ -20,7 +20,6 @@
             android:id="@+id/photoImageView"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/rounded_rectangle_blue"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent" />
 

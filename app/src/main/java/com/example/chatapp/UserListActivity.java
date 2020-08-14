@@ -8,40 +8,26 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.example.chatapp.Adapter.UserAdapter;
 import com.example.chatapp.model.UserModel;
 import com.example.chatapp.ui.login.SignInActivity;
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 
 public class UserListActivity extends AppCompatActivity {
 
-    private static final int RC_AVATAR_PICKER = 1;
-
-
     private FirebaseAuth mAuth;
-    private UserModel userModel;
-    private String userName;
 
     private DatabaseReference usersDatabaseReference;
     private ChildEventListener usersChildEventListeners;
@@ -50,32 +36,15 @@ public class UserListActivity extends AppCompatActivity {
     private RecyclerView usersRecyclerView;
     private UserAdapter userAdapter;
     private RecyclerView.LayoutManager userLayoutManager;
-    private StorageReference avatarImageStorageReference;
-    private DatabaseReference usersDatabaseReferences;
-
-    private FirebaseStorage storage;
-    FirebaseDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_list);
 
-        Intent intent = getIntent();
-        if (intent != null) {
-            userName = intent.getStringExtra("username");
-        }
-
         userModelArrayList = new ArrayList<>();
-
-        storage = FirebaseStorage.getInstance();
-        database = FirebaseDatabase.getInstance();
-
-        avatarImageStorageReference = storage.getReference().child("avatar_images");
-        usersDatabaseReferences = database.getReference().child("users");
-
-
         mAuth = FirebaseAuth.getInstance();
+
         buildRecyclerView();
         attachUserDatabaseReferenceListener();
     }
@@ -95,15 +64,6 @@ public class UserListActivity extends AppCompatActivity {
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(UserListActivity.this, SignInActivity.class));
                 break;
-
-            case R.id.profile_avatar:
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/*");
-                intent.putExtra(intent.EXTRA_LOCAL_ONLY, true);
-                startActivityForResult(Intent.createChooser(intent, "Choose an image"),
-                        RC_AVATAR_PICKER);
-                break;
-            default:
         }
         return super.onOptionsItemSelected(item);
     }
@@ -116,9 +76,7 @@ public class UserListActivity extends AppCompatActivity {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                     UserModel userModel = dataSnapshot.getValue(UserModel.class);
-                    if (userModel.getId().equals(mAuth.getCurrentUser().getUid())) {
-                        setUser(userModel);
-                    } else {
+                    if (!userModel.getId().equals(mAuth.getCurrentUser().getUid())) {
                         userModel.setAvatarMockResource(userModel.getAvatarMockResource());
                         userModelArrayList.add(userModel);
                         userAdapter.notifyDataSetChanged();
@@ -149,10 +107,6 @@ public class UserListActivity extends AppCompatActivity {
         }
     }
 
-    private void setUser(UserModel userModel) {
-        this.userModel = userModel;
-    }
-
     private void buildRecyclerView() {
         usersRecyclerView = findViewById(R.id.userListRecyclerView);
         usersRecyclerView.setHasFixedSize(true);
@@ -167,53 +121,9 @@ public class UserListActivity extends AppCompatActivity {
         userAdapter.setOnUserClickListener(position -> gotoChat(position));
     }
 
-    @Override
-    public void onBackPressed() {
-        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
-            finish();
-        } else {
-            super.onBackPressed();
-        }
-    }
-
     private void gotoChat(int position) {
         Intent intent = new Intent(UserListActivity.this, ChatActivity.class);
         intent.putExtra("recipient", userModelArrayList.get(position).getId());
         startActivity(intent);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RC_AVATAR_PICKER && resultCode == RESULT_OK) {
-            Uri selectedAvatarUri = data.getData();
-            final StorageReference avatarReference = avatarImageStorageReference.child(selectedAvatarUri.getLastPathSegment());
-            UploadTask uploadTask = avatarReference.putFile(selectedAvatarUri);
-
-            uploadTask.continueWithTask(task -> {
-                if (!task.isSuccessful()) {
-                    task.getException();
-                }
-                return avatarReference.getDownloadUrl();
-            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                @Override
-                public void onComplete(@NonNull Task<Uri> task) {
-                    if (task.isSuccessful()) {
-                        Uri downloadUri = task.getResult();
-                        if (downloadUri != null) {
-
-                            userModel.setAvatarMockResource(downloadUri.toString());
-
-                            Toast.makeText(getApplicationContext(), downloadUri.toString(), Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Operation failed", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-            });
-        }
-
-
     }
 }
